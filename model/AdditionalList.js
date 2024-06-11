@@ -1,22 +1,23 @@
-const { DataTypes } = require("sequelize");
-const { sequelize } = require("../db"); 
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const AdditionalList = sequelize.define(
-  "AdditionalList",
-  {
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    items: {
-      type: DataTypes.JSONB, 
-      allowNull: false,
-      defaultValue: [],
-    },
+const AdditionalListSchema = new Schema({
+  title: {
+    type: String,
+    required: true,
   },
-  {
-    timestamps: true,
-  }
-);
+  items: [
+    {
+      title: {
+        type: String,
+        required: true,
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
+});
 
-module.exports = AdditionalList;
+module.exports = mongoose.model("AdditionalList", AdditionalListSchema);
