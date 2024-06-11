@@ -1,57 +1,21 @@
 const express = require("express");
 const router = express.Router();
-const AdditionalList = require("../model/AdditionalList");
+const SalesData = require("../model/SalesData"); // Import the SalesData model
 
-const addAdditionalList = async (req, res) => {
+const getChartData = async (req, res) => {
   try {
-    const newList = new AdditionalList({
-      title: req.body.title,
-      items: req.body.items || [],
-    });
-    const savedList = await newList.save();
-    res.status(200).json(savedList);
+    const salesData = await SalesData.find(); // Retrieve sales data from the SalesData collection
+    // Map the retrieved sales data to match the format expected by the chart
+    const chartData = salesData.map((data) => ({
+      year: data.year, // Assuming 'year' property exists in SalesData schema
+      sales: data.sales, // Assuming 'sales' property exists in SalesData schema
+    }));
+    res.status(200).json(chartData);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-const getAdditionalLists = async (req, res) => {
-  try {
-    const lists = await AdditionalList.find();
-    res.status(200).json(lists);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-const updateAdditionalList = async (req, res) => {
-  try {
-    const updatedList = await AdditionalList.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-    res.status(200).json(updatedList);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-const deleteAdditionalList = async (req, res) => {
-  try {
-    const deletedList = await AdditionalList.findByIdAndDelete(req.params.id);
-    if (!deletedList) {
-      return res.status(404).json({ message: "List not found" });
-    }
-    res.status(200).json({ message: "List deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-router.get("/getAdditionalLists", getAdditionalLists);
-router.post("/addAdditionalList", addAdditionalList);
-router.put("/updateAdditionalList/:id", updateAdditionalList);
-router.delete("/deleteAdditionalList/:id", deleteAdditionalList);
+router.get("/chartData", getChartData);
 
 module.exports = router;
