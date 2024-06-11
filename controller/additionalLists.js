@@ -1,14 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const SalesData = require("../model/SalesData"); // Import the SalesData model
+const SalesData = require("../model/SalesData");
 
 const getChartData = async (req, res) => {
   try {
-    const salesData = await SalesData.find(); // Retrieve sales data from the SalesData collection
-    // Map the retrieved sales data to match the format expected by the chart
+    const salesData = await SalesData.find();
     const chartData = salesData.map((data) => ({
-      year: data.year, // Assuming 'year' property exists in SalesData schema
-      sales: data.sales, // Assuming 'sales' property exists in SalesData schema
+      year: data.year,
+      sales: data.sales,
     }));
     res.status(200).json(chartData);
   } catch (error) {
