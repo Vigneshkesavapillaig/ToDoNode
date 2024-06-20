@@ -4,6 +4,8 @@ from sqlalchemy import Column, Integer, String, JSON, DateTime
 from sqlalchemy.orm import validates
 from datetime import datetime
 from flask_cors import CORS
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -12,6 +14,20 @@ CORS(app)  # Enable CORS for all routes
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:Vignesh@localhost/todo_app'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+# Database connection parameters
+DB_PARAMS = {
+    'dbname': 'todo_app',
+    'user': 'postgres',
+    'password': 'Vignesh',
+    'host': 'localhost',
+    'port': 5432
+}
+
+def get_db_connection():
+    """Helper function to get a database connection using psycopg2."""
+    conn = psycopg2.connect(**DB_PARAMS)
+    return conn
 
 # Define AdditionalList model
 class AdditionalList(db.Model):
@@ -27,8 +43,13 @@ class AdditionalList(db.Model):
 @app.route('/api/additionalLists/getAdditionalLists', methods=['GET'])
 def get_additional_lists():
     try:
-        lists = AdditionalList.query.all()
-        return jsonify([{'id': lst.id, 'title': lst.title, 'items': lst.items, 'createdAt': lst.createdAt, 'updatedAt': lst.updatedAt} for lst in lists])
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute('SELECT * FROM "AdditionalLists"')
+        lists = cur.fetchall()
+        cur.close()
+        conn.close()
+        return jsonify(lists)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -70,7 +91,13 @@ def update_additional_list(id):
         list_to_update.items = items
 
         db.session.commit()
-        return jsonify({'id': list_to_update.id, 'title': list_to_update.title, 'items': list_to_update.items, 'createdAt': list_to_update.createdAt, 'updatedAt': list_to_update.updatedAt}), 200
+        return jsonify({
+            'id': list_to_update.id,
+            'title': list_to_update.title,
+            'items': list_to_update.items,
+            'createdAt': list_to_update.createdAt,
+            'updatedAt': list_to_update.updatedAt
+        }), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
